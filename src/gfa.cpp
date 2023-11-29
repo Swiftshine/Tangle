@@ -139,7 +139,7 @@ void GFA::unpack(string inName, string outName) {
 }
 
 // nonfunctioning
-void GFA::pack(string inName, string outName, int userGFCPOffset, int compressionType) {
+void GFA::pack(string inName, string outName, int compressionType, int userGFCPOffset) {
 	if (userGFCPOffset != 0)
 		assert((userGFCPOffset % 0x10) == 0, "Error - GFA::pack() user GFCP offset is not a factor of 16 (0x10)");
 
@@ -190,7 +190,7 @@ void GFA::pack(string inName, string outName, int userGFCPOffset, int compressio
 			u32 filesize = getFileSize(file);
 			fileEntries[i].decompressedSize = filesize;
 			// put the file's name (not its path) into filename vector, append null-termination
-			filenames[i] = filename.substr(filename.find_last_of("/\\") + 1) + '\0';
+			filenames[i] = dir_entry.path().filename().string() + '\0';
 			
 			compressionHeader.decompressedSize += filesize;
 

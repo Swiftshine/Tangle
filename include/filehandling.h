@@ -59,3 +59,11 @@ static u32 getFileSize(string name) {
 	file.close();
 	return result;
 }
+
+static int getFileCount(string folderName) {
+	int fileCount = 0;
+	for (auto const& dir_entry : fs::directory_iterator{ folderName }) {
+		fileCount++;
+	}
+	return fileCount;
+}
