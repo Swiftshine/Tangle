@@ -1,0 +1,14 @@
+*.vcxproj*
+x64
+Debug
+Release
+.vs
+
+
+*.gfa
+key*
+keey*
+test*
+yww*
+*.dat
+gfas lmao
