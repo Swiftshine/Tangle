@@ -139,7 +139,7 @@ void GFA::unpack(string inName, string outName) {
 }
 
 // nonfunctioning
-void GFA::pack(string inName, string outName, int compressionType, int userGFCPOffset) {
+void GFA::pack(string inName, string outName, int compressionType, int userGFCPOffset, int game) {
 	if (userGFCPOffset != 0)
 		assert((userGFCPOffset % 0x10) == 0, "Error - GFA::pack() user GFCP offset is not a factor of 16 (0x10)");
 
@@ -248,7 +248,7 @@ void GFA::pack(string inName, string outName, int compressionType, int userGFCPO
 	// now we need to pack all this stuff.
 	archiveHeader.dataSize = sizeof(CompressionHeader) + compressionHeader.compressedSize;
 
-	if (userGFCPOffset == 0) {
+	if (userGFCPOffset != 0) {
 		archiveHeader.dataOffset = sizeof(ArchiveHeader) + archiveHeader.fileInfoSize;
 
 		if (archiveHeader.dataOffset % 0x10 != 0) {

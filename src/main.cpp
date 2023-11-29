@@ -2,22 +2,6 @@
 #include "tangle.h"
 #include <sstream>
 
-enum Arguments {
-	TANGLE = 0,
-	USAGE,
-	INPUT,
-	OUTPUT,
-	GAME,
-	OFFSET,
-};
-
-enum Game {
-	EpicYarnWii = 1,
-	WoolyWorldU,
-	WoolyWorld3DS,
-	EpicYarn3DS
-};
-
 int getCompressionType(int game) {
 	if (game == 1 || game == 2) {
 		return 1;
