@@ -4,6 +4,7 @@
 #include <fstream>
 #include <filesystem>
 #include <cstdio>
+#include <sstream>
 
 typedef std::string string;
 namespace fs = std::filesystem;
@@ -25,8 +26,14 @@ enum Arguments {
 };
 
 enum Game {
-	EpicYarnWii = 1,
-	WoolyWorldU,
-	WoolyWorld3DS,
+	DefaultGame = 0,
+	EpicYarnWii,
+	WoollyWorldU,
+	WoollyWorld3DS,
 	EpicYarn3DS
+};
+
+enum ReturnStatus {
+	FAILED = 0,
+	SUCCESS
 };

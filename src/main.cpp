@@ -1,15 +1,4 @@
-#include <iostream>
 #include "tangle.h"
-#include <sstream>
-
-int getCompressionType(int game) {
-	if (game == 1 || game == 2) {
-		return 1;
-	} if (game == 3 || game == 4) {
-		// you can return 2 as well
-		return 3;
-	}
-}
 
 // this is kinda ugly but i think this works?
 int main(int argc, char* argv[]) {
@@ -52,7 +41,7 @@ int main(int argc, char* argv[]) {
 	if (argc >= 4)
 		output = argv[OUTPUT];
 
-	int game = 0;
+	int game = DefaultGame;
 	if (argc >= 5)
 		game = std::stoi(argv[GAME]);
 
@@ -73,53 +62,92 @@ int main(int argc, char* argv[]) {
 	if (usage.compare("-c") == 0) {
 		// compressing
 		if (argc == 3) { // usage, input
-			GFA::pack(input);
-			std::cout << "done" << std::endl;
-			return 0;
-		}
-		else if (argc == 4) { // usage, input, output
-			GFA::pack(input, output);
-			std::cout << "done" << std::endl;
-			return 0;
-		}
-		else if (argc == 5) { // usage, input, output, game type
-			if (game < 1 || game > 4) {
-				// invalid game, let the user know but continue as normal
-				std::cout << "Warning - invalid game type (should be 1, 2, 3, or 4). See README for usage." << std::endl;
-				GFA::pack(input, output);
-				std::cout << "done" << std::endl;
+			if (GFA::pack(input) == SUCCESS) {
+				std::cout << "Successfully packed " << input << std::endl;
 				return 0;
 			}
 			else {
-				GFA::pack(input, output, getCompressionType(game));
-				std::cout << "done" << std::endl;
+				std::cout << "Failed to pack " << input << std::endl;
+				return -1;
+			}
+		}
+		else if (argc == 4) { // usage, input, output
+			if (GFA::pack(input, output) == SUCCESS) {
+				std::cout << "Successfully packed " << input << " into " << output << std::endl;
 				return 0;
+			}
+			else {
+				std::cout << "Failed to pack " << input << " into " << output << std::endl;
+				return -1;
+			}
+		}
+		else if (argc == 5) { // usage, input, output, game type
+			if ((game < EpicYarnWii || game > EpicYarn3DS) && game != DefaultGame) {
+				// invalid game, let the user know but continue as normal
+				std::cout << "Warning - invalid game type (should be 0, 1, 2, 3, or 4). See README for usage." << std::endl;
+				if (GFA::pack(input, output)) {
+					std::cout << "Successfully packed " << input << " into " << output << std::endl;
+					return 0;
+				}
+				else {
+					std::cout << "Failed to pack " << input << " into " << output << std::endl;
+					return -1;
+				}
+			}
+			else {
+				if (GFA::pack(input, output, game) == SUCCESS) {
+					std::cout << "Successfully packed " << input << " into " << output << std::endl;
+					return 0;
+				}
+				else {
+					std::cout << "Failed to pack " << input << " into " << output << std::endl;
+					return -1;
+				}
 			}
 		}
 		else if (argc == 6) { // usage, input, output, game type, offset
 			if (usage.compare("-c") == 0) {
 				int game = std::stoi(argv[GAME]);
-				if (game < 1 || game > 4) {
-					auto offset = std::stoi(argv[OFFSET]);
+				if (game < 1 || game > 4) { // because game should never be valid here
 					if (offset < 0) {
 						// invalid offset, let the user know but continue as normal
 						std::cout << "Warning - invalid offset (offset should never be negative). See README for usage." << std::endl;
-						GFA::pack(input, output, getCompressionType(game));
-						std::cout << "done" << std::endl;
-						return 0;
+						if (GFA::pack(input, output, game) == SUCCESS) {
+							std::cout << "Successfully packed  " << input << " into " << output << std::endl;
+							return 0;
+						}
+						std::cout << "Failed to pack " << input << " into " << output << std::endl;
+						return -1;
 					}
 					else if (offset % 0x10 != 0) {
 						std::cout << "Warning - invalid offset (offset should be a multiple of 16 (0x10)). See README for usage." << std::endl;
-						GFA::pack(input, output, getCompressionType(game));
-						std::cout << "done" << std::endl;
-						return 0;
+						if (GFA::pack(input, output, game) == SUCCESS) {
+							std::cout << "Successfully packed " << input << " into " << output << std::endl;
+							return 0;
+						}
+						std::cout << "Failed to pack " << input << " into " << output << std::endl;
+						return -1;
 					}
 					// if this doesn't work then idk
-					else if (offset < (totalNameLengths + (filecount * sizeof(GFA::CompressionHeader)) + sizeof(GFA::ArchiveHeader))) {
-						std::cout << "Warning - invalid offset (offset needs to be larger than " << totalNameLengths << ")." << std::endl;
-						GFA::pack(input, output, getCompressionType(game));
-						std::cout << "done" << std::endl;
-						return 0;
+					else if (offset < (totalNameLengths + (filecount * sizeof(GFA::FileEntry)) + sizeof(GFA::ArchiveHeader))) {
+						auto minimumOffs = totalNameLengths + (filecount * sizeof(GFA::FileEntry)) + sizeof(GFA::ArchiveHeader);
+						std::cout << "Warning - invalid offset (offset needs to be larger than " << minimumOffs << " (0x" << std::hex << minimumOffs << ")). See README for usage." << std::endl;
+
+						if (GFA::pack(input, output, game) == SUCCESS) {
+							std::cout << "Successfully packed " << input << " into " << output << std::endl;
+							return 0;
+						}
+						std::cout << "Failed to pack " << input << " into " << output << std::endl;
+						return -1;
+					}
+					else {
+						// the offset is probably valid
+						if (GFA::pack(input, output, game, offset) == SUCCESS) {
+							std::cout << "Successfully packed " << input << " into " << output << std::endl;
+							return 0;
+						}
+						std::cout << "Failed to pack " << input << " into " << output << std::endl;
+						return -1;
 					}
 				}
 			}
@@ -127,11 +155,28 @@ int main(int argc, char* argv[]) {
 	}
 	else if (usage.compare("-d") == 0) {
 		// decompressing
-		if (argc == 3)
-			GFA::unpack(input);
-		else if (argc == 4)
-			GFA::unpack(input, output);
+		if (argc == 3) {
+			if (GFA::unpack(input) == SUCCESS) {
+				std::cout << "Successfully unpacked " << input << std::endl;
+				return 0;
+			}
+			else {
+				std::cout << "Failed to unpack " << input << std::endl;
+				return -1;
+			}
+		}
+		else if (argc == 4) {
+			if (GFA::unpack(input, output) == SUCCESS) {
+				std::cout << "Successfully unpacked " << input << " into " << output << std::endl;
+				return 0;
+			}
+			else {
+				std::cout << "Failed to unpack " << input << " into " << output << std::endl;
+				return -1;
+			}
+
+		}
 	}
-	std::cout << "finished." << std::endl;
-	return 0;
+	std::cout << "If you ended up here, the program failed." << std::endl;
+	return -2;
 }

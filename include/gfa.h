@@ -40,6 +40,6 @@ public:
 #pragma pack(pop)
 
 public:
-	static void unpack(string inName, string outName = "");
-	static void pack(string inName, string outName = "", int compressionType = 1, int userGFCPOffset = 0, int game = 0);
+	static bool unpack(string inName, string outName = "");
+	static bool pack(string inName, string outName = "", int game = 0, int userGFCPOffset = 0);
 };

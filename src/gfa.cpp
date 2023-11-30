@@ -1,13 +1,28 @@
 #include "tangle.h"
 #include <cassert>
 
-// functioning, but a little ugly
-void GFA::unpack(string inName, string outName) {
+void removeTempFiles(string folderName, int count) {
+	for (int i = 0; i < count; i++)
+		fs::remove(folderName + "\\" + "temp" + std::string(std::to_string(i)) + ".bin");
+}
+
+int getCompressionType(int game) {
+	if (game == EpicYarnWii || game == WoollyWorldU || game == DefaultGame) {
+		return 1;
+	}
+	else if (game == WoollyWorld3DS || game == EpicYarn3DS) {
+		// you can return 2 as well, im just using 3 because that's what appears in both games
+		return 3;
+	}
+	return -1;
+}
+
+bool GFA::unpack(string inName, string outName) {
 	// load the contents of the archive into a buffer
 	std::fstream infile(inName, std::ios::in | std::ios::binary);
 	if (!infile.is_open()) {
 		std::cout << "Error - couldn't open file " + inName << std::endl;
-		return;
+		return FAILED;
 	}
 
 	if (outName == "") {
@@ -18,7 +33,7 @@ void GFA::unpack(string inName, string outName) {
 	if (!fs::create_directory(outFolder)) {
 		if (!fs::is_directory(outFolder)) {
 			std::cout << "Error - failed to create folder for " + outName << std::endl;
-			return;
+			return FAILED;
 		}
 	}
 	
@@ -82,13 +97,13 @@ void GFA::unpack(string inName, string outName) {
 	FILE* temp1 = fopen("temp1.bin", "rb");
 	if (!temp1) {
 		std::cout << "failed to create temp1 file" << std::endl;
-		return;
+		return FAILED;
 	}
 
 	FILE* temp2 = fopen("temp2.bin", "wb");
 	if (!temp2) {
 		std::cout << "failed to create temp2 file" << std::endl;
-		return;
+		return FAILED;
 	}
 	// decompress the data
 	if (compressionHeader.compressionType == 1) {
@@ -104,12 +119,12 @@ void GFA::unpack(string inName, string outName) {
 		fclose(temp2);
 	}
 	else {
-		std::cout << "Error - unknown compression type" << std::endl;
+		std::cout << "Error - GFA::unpack() - unknown compression type" << std::endl;
 		fclose(temp1);
 		fclose(temp2);
 		fs::remove("temp1.bin");
 		fs::remove("temp2.bin");
-		return;
+		return FAILED;
 	}
 
 	tempFile.open("temp2.bin", std::ios::in | std::ios::binary);
@@ -136,12 +151,27 @@ void GFA::unpack(string inName, string outName) {
 	fs::remove("temp1.bin");
 	fs::remove("temp2.bin");
 	std::cout << "successfully decompressed data" << std::endl;
+	return SUCCESS;
 }
 
 // nonfunctioning
-void GFA::pack(string inName, string outName, int compressionType, int userGFCPOffset, int game) {
-	if (userGFCPOffset != 0)
-		assert((userGFCPOffset % 0x10) == 0, "Error - GFA::pack() user GFCP offset is not a factor of 16 (0x10)");
+bool GFA::pack(string inName, string outName, int game, int userGFCPOffset) {
+	if (game == DefaultGame) {
+		// check if the user meant to specify the GFCP Header offset
+		if (userGFCPOffset < 0) {
+			// it's not valid
+			std::cout << "Warning - GFA::pack() - user-defined GFCP offset is invalid, using default" << std::endl;
+			userGFCPOffset = 0;
+		}
+		// if it's zero then it's zero, if it's valid then it's valid
+	}
+	else if (game != DefaultGame && (game < EpicYarnWii || game > EpicYarn3DS)) {
+		// invalid game, using default behaviour
+		std::cout << "Warning - GFA::pack() - user-defined target game is invalid, using default" << std::endl;
+		game = DefaultGame;
+	}
+
+	// we can begin now
 
 	Buffer output;
 	ArchiveHeader archiveHeader{ 0 };
@@ -150,7 +180,7 @@ void GFA::pack(string inName, string outName, int compressionType, int userGFCPO
 		archiveHeader.magic[1] = 'F';
 		archiveHeader.magic[2] = 'A';
 		archiveHeader.magic[3] = 'C';
-		archiveHeader._4 = 0; // is this important? i don't know
+		archiveHeader._4 = 0x01030000; // is this important? i don't know
 		archiveHeader.version = 1; // i'll deal with this later
 
 		archiveHeader.fileCountOffset = 0x2C;
@@ -182,7 +212,7 @@ void GFA::pack(string inName, string outName, int compressionType, int userGFCPO
 
 			std::fstream file(filename, std::ios::in | std::ios::binary);
 			if (!file.is_open()) {
-				std::cout << "GFA::pack() - could not open file " + filename + ", the file has been skipped." << std::endl;
+				std::cout << "Warning - GFA::pack() - could not open file " + filename + ", the file has been skipped" << std::endl;
 				file.close();
 				continue;
 			}
@@ -210,7 +240,7 @@ void GFA::pack(string inName, string outName, int compressionType, int userGFCPO
 		compressionHeader.magic[2] = 'C';
 		compressionHeader.magic[3] = 'P';
 		compressionHeader.version = 1;
-		compressionHeader.compressionType = compressionType;
+		compressionHeader.compressionType = getCompressionType(game);
 		compressionHeader.decompressedSize; // already set
 		compressionHeader.compressedSize; // set later on
 	}
@@ -219,11 +249,28 @@ void GFA::pack(string inName, string outName, int compressionType, int userGFCPO
 	for (int i = 0; i < fileCount; i++) {
 		std::string tempFilename = "temp" + std::string(std::to_string(i)) + ".bin";
 		FILE* decompressed = fopen((inName + "\\" + filenames[i]).c_str(), "rb");
+		if (!decompressed) {
+			std::cout << "Error - GFA::pack() - could not create a temp file (1)" << std::endl;
+			return FAILED;
+		}
 		FILE* tempFile = fopen((inName + "\\" + tempFilename).c_str(), "wb");
-		if (compressionType == 1)
+		if (!tempFile) {
+			std::cout << "Error - GFA::pack() - could not create a temp file (2)" << std::endl;
+			fclose(decompressed);
+			removeTempFiles(inName, fileCount);
+			return FAILED;
+		}
+		if (getCompressionType(game) == 1)
 			BPE::compress(decompressed, tempFile);
-		else if (compressionType == 2 || compressionType == 3)
+		else if (getCompressionType(game) == 2 || getCompressionType(game) == 3)
 			LZ77::compress(decompressed, tempFile); // untested
+		else {
+			std::cout << "Error - GFA::pack() - invalid compression type of " << getCompressionType(game) << std::endl;
+			fclose(tempFile);
+			fclose(decompressed);
+			removeTempFiles(inName, fileCount);
+			return FAILED;
+		}
 		fclose(tempFile);
 		fclose(decompressed);
 	}
@@ -247,13 +294,23 @@ void GFA::pack(string inName, string outName, int compressionType, int userGFCPO
 
 	// now we need to pack all this stuff.
 	archiveHeader.dataSize = sizeof(CompressionHeader) + compressionHeader.compressedSize;
+	
 
-	if (userGFCPOffset != 0) {
+	if (userGFCPOffset == 0) {
 		archiveHeader.dataOffset = sizeof(ArchiveHeader) + archiveHeader.fileInfoSize;
 
 		if (archiveHeader.dataOffset % 0x10 != 0) {
 			u32 padding = 0x10 - (archiveHeader.dataOffset % 0x10);
 			archiveHeader.dataOffset += padding;
+		}
+
+		// game-specific offset information
+		if (game == EpicYarnWii) {
+			archiveHeader.dataOffset += 0x10;
+			archiveHeader._4 = 0x00030000; // 0x00030000
+		}
+		if (game == WoollyWorldU) {
+			archiveHeader.dataOffset = 0x2000;
 		}
 	}
 	else {
@@ -262,6 +319,8 @@ void GFA::pack(string inName, string outName, int compressionType, int userGFCPO
 
 
 	// we finished with the archive header
+	// time to start putting in data into the output
+
 	{
 		auto const gfacBeg = reinterpret_cast<u8*>(&archiveHeader);
 		Buffer tempBuffer(gfacBeg, gfacBeg + sizeof(ArchiveHeader));
@@ -293,6 +352,9 @@ void GFA::pack(string inName, string outName, int compressionType, int userGFCPO
 		output.insert(output.end(), tempBuffer.begin(), tempBuffer.end());
 	}
 
+	while (output.size() < archiveHeader.dataOffset)
+		output.push_back(0); // any necessary padding
+
 	{
 		auto const gfcpBeg = reinterpret_cast<u8*>(&compressionHeader);
 		Buffer tempBuffer(gfcpBeg, gfcpBeg + sizeof(CompressionHeader));
@@ -303,13 +365,12 @@ void GFA::pack(string inName, string outName, int compressionType, int userGFCPO
 		output.insert(output.end(), compressedData[i].begin(), compressedData[i].end());
 	}
 
-	// man what am i even doing
+
 	FileReader reader(&output);
 	reader.write(inName + ".gfa");
 	reader.close();
 
 	// remove temporary compressed files
-	for (int i = 0; i < fileCount; i++)
-		fs::remove(inName + "\\" + "temp" + std::string(std::to_string(i)) + ".bin");
-	std::cout << "successfully compressed data" << std::endl;
+	removeTempFiles(inName, fileCount);
+	return SUCCESS;
 }

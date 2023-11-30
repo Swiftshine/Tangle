@@ -5,10 +5,11 @@ An (experimental) tool for [GFA (GoodFeelArchive) Files](https://swiftshine.gith
 ### Command Syntax
 `tangle [1] <input name> <output name> [2] [3]`
 ### Parameters
+In most cases, you'd only want to specify `[1]`, `<input name>`, `<output name>`, and `[2]`.
+
 
 `[1]`: Required. Specifies what the program is meant to do.
 * `-c` to pack the contents of a folder into a .gfa archive.
- 
 * `-d` to unpack the contents of a .gfa archive into a folder.
 
 `<input name>`: Required. The name of the archive or folder to manipulate.
@@ -17,6 +18,7 @@ An (experimental) tool for [GFA (GoodFeelArchive) Files](https://swiftshine.gith
 
 `[2]` Optional. This option is used to specify which game to make a .gfa archive for. The options are as follows:
 
+	0. Default
 	1. Kirby's Epic Yarn (Wii)
 	2. Yoshi's Wooly World (Wii U)
 	3. Poochy and Yoshi's Wooly World (3DS)
@@ -24,7 +26,9 @@ An (experimental) tool for [GFA (GoodFeelArchive) Files](https://swiftshine.gith
 
 If any of the below conditions are met, this value will be ignored:
 * `[1]` is `-d`
-* The value of `[2]` is not any of the above options (such as 0)
+* The value of `[2]` is not any of the above options
+
+**Note** - if `[2]` is 0, it will use the same type of compression as 1 and 2 (Byte Pair Encoding). (If you want to use LZ77, you can set `[2]` to 4, as there is current no (known) offset specification)
 
 `[3]`: Optional. This option is used to specify which offset the GFCP Header should be located at. If any of the below conditions are met, this option will be ignored:
 * `[1]` is `-d`
