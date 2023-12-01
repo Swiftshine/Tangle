@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
 				return 0;
 			}
 			else {
-				std::cout << "Failed to pack " << input << " into " << output << std::endl;
+				std::cout << "Failed to pack " << input << " into " << output << ".gfa" << std::endl;
 				return -1;
 			}
 		}
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
 					return 0;
 				}
 				else {
-					std::cout << "Failed to pack " << input << " into " << output << std::endl;
+					std::cout << "Failed to pack " << input << " into " << output << ".gfa" << std::endl;
 					return -1;
 				}
 			}
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
 					return 0;
 				}
 				else {
-					std::cout << "Failed to pack " << input << " into " << output << std::endl;
+					std::cout << "Failed to pack " << input << " into " << output << ".gfa" << std::endl;
 					return -1;
 				}
 			}
@@ -108,15 +108,26 @@ int main(int argc, char* argv[]) {
 		else if (argc == 6) { // usage, input, output, game type, offset
 			if (usage.compare("-c") == 0) {
 				int game = std::stoi(argv[GAME]);
-				if (game < 1 || game > 4) { // because game should never be valid here
+				if (game < 1 || game > 3) { // because game should never be valid here.
+					if (game == EpicYarn3DS /* <- this value is 4 */) {
+						// I'm using a value of 4 here because Extra Epic Yarn doesn't *seem* to have
+						// any offset specifications? if i find out that there is one then i'll
+						// adapt this but for now, nah
+						if (GFA::pack(input, output, game, offset) == SUCCESS) {
+							std::cout << "Successfully packed " << input << " into " << output << ".gfa" << std::endl;
+							return 0;
+						}
+						std::cout << "Failed to pack " << input << " into " << output << ".gfa" << std::endl;
+						return -1;
+					}
 					if (offset < 0) {
 						// invalid offset, let the user know but continue as normal
 						std::cout << "Warning - invalid offset (offset should never be negative). See README for usage." << std::endl;
 						if (GFA::pack(input, output, game) == SUCCESS) {
-							std::cout << "Successfully packed  " << input << " into " << output << std::endl;
+							std::cout << "Successfully packed " << input << " into " << output << ".gfa" << std::endl;
 							return 0;
 						}
-						std::cout << "Failed to pack " << input << " into " << output << std::endl;
+						std::cout << "Failed to pack " << input << " into " << output << ".gfa" << std::endl;
 						return -1;
 					}
 					else if (offset % 0x10 != 0) {
@@ -125,7 +136,7 @@ int main(int argc, char* argv[]) {
 							std::cout << "Successfully packed " << input << " into " << output << std::endl;
 							return 0;
 						}
-						std::cout << "Failed to pack " << input << " into " << output << std::endl;
+						std::cout << "Failed to pack " << input << " into " << output << ".gfa" << std::endl;
 						return -1;
 					}
 					// if this doesn't work then idk
@@ -137,7 +148,7 @@ int main(int argc, char* argv[]) {
 							std::cout << "Successfully packed " << input << " into " << output << std::endl;
 							return 0;
 						}
-						std::cout << "Failed to pack " << input << " into " << output << std::endl;
+						std::cout << "Failed to pack " << input << " into " << output << ".gfa" << std::endl;
 						return -1;
 					}
 					else {
@@ -146,9 +157,18 @@ int main(int argc, char* argv[]) {
 							std::cout << "Successfully packed " << input << " into " << output << std::endl;
 							return 0;
 						}
-						std::cout << "Failed to pack " << input << " into " << output << std::endl;
+						std::cout << "Failed to pack " << input << " into " << output << ".gfa" << std::endl;
 						return -1;
 					}
+				}
+				else { // the game *is* valid, in which case we will completely disregard the offset
+					std::cout << "Warning - user-inputted offset will be ignored" << std::endl;
+					if (GFA::pack(input, output, game) == SUCCESS) {
+						std::cout << "Successfully packed " << input << " into " << output << std::endl;
+						return 0;
+					}
+					std::cout << "Failed to pack " << input << " into " << output << ".gfa" << std::endl;
+					return -1;
 				}
 			}
 		}

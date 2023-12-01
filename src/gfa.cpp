@@ -180,7 +180,10 @@ bool GFA::pack(string inName, string outName, int game, int userGFCPOffset) {
 		archiveHeader.magic[1] = 'F';
 		archiveHeader.magic[2] = 'A';
 		archiveHeader.magic[3] = 'C';
-		archiveHeader._4 = 0x01030000; // is this important? i don't know
+		if (game == EpicYarnWii)
+			archiveHeader._4 = 0x01300000; // is this important? i don't know
+		else
+			archiveHeader._4 = 0x00300000;
 		archiveHeader.version = 1; // i'll deal with this later
 
 		archiveHeader.fileCountOffset = 0x2C;
@@ -263,7 +266,7 @@ bool GFA::pack(string inName, string outName, int game, int userGFCPOffset) {
 		if (getCompressionType(game) == 1)
 			BPE::compress(decompressed, tempFile);
 		else if (getCompressionType(game) == 2 || getCompressionType(game) == 3)
-			LZ77::compress(decompressed, tempFile); // untested
+			LZ77::compress(decompressed, tempFile, filenames[i]); // untested
 		else {
 			std::cout << "Error - GFA::pack() - invalid compression type of " << getCompressionType(game) << std::endl;
 			fclose(tempFile);

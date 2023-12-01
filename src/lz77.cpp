@@ -45,12 +45,16 @@ void LZ77::decompress(FILE* input, FILE* output) {
     fseek(input, 0, SEEK_SET);
 
     // If file is empty, return alert
-    if (inputLength == 0)
+    if (inputLength == 0) {
+        std::cout << "Warning - LZ77::decompress() - the input file is empty!" << std::endl;
         return;
+    }
 
     // If file length is smaller than arraySize, not worth processing
-    if (inputLength < arraySize)
+    if (inputLength < arraySize) {
+        std::cout << "Warning - LZ77::decompress() - the input file is too small to decompress" << std::endl;
         return;
+    }
 
     // Load array with initial bytes
     fread(array, 1, arraySize, input);
@@ -158,7 +162,7 @@ void LZ77::decompress(FILE* input, FILE* output) {
     fseek(output, 0, SEEK_SET);
 }
 
-void LZ77::compress(FILE* input, FILE* output) {
+void LZ77::compress(FILE* input, FILE* output, string inputName) {
     bool last = false;
     int inputLength = 0;
     int outputLength = 0;
@@ -178,17 +182,15 @@ void LZ77::compress(FILE* input, FILE* output) {
     inputLength = ftell(input);
     fseek(input, 0, SEEK_SET);
 
-    fprintf(stdout, "Input file size: %d bytes", inputLength);
-
     // If file is empty, return alert
     if (inputLength == 0) {
-        std::cout << "error - LZ77::compress() inputLength is zero";
+        std::cout << "Warning -  - LZ77::compress() - the file is empty!" << std::endl;
         return;
     }
 
     // If file length is smaller than arraySize, not worth processing
     if (inputLength < arraySize) {
-        std::cout << "error - LZ77::compress() inputLength is smaller than arraySize";
+        std::cout << "Warning - LZ77::compress() - the file " << inputName << " is too small to compress" << std::endl;
         return;
     }
 

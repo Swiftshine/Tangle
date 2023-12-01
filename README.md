@@ -1,6 +1,10 @@
 # Tangle
 An (experimental) tool for [GFA (GoodFeelArchive) Files](https://swiftshine.github.io/documentation/gfa.html).
 
+## Special Thanks
+[BPE de/compression source](http://www.pennelynn.com/Documents/CUJ/HTML/94HTML/19940045.HTM)
+[LZ77 de/compression source](https://github.com/Favrito/LZ77/blob/master/main.c)
+
 ## Usage
 ### Command Syntax
 `tangle [1] <input name> <output name> [2] [3]`
@@ -41,19 +45,20 @@ This is for the sake of consistency.
 
 This value can be input as decimal or hex. To input as hex, just append `0x` to the beginning.
 ## Progress
-- [ ] archive manipulation
+- [X] archive manipulation
 	- [X] GFA::unpack() structure
 	- [X] GFA::unpack() functionality
 	- [X] GFA::pack() structure
-	- [ ] GFA::pack() functionality
-- [ ] compression
+	- [X] GFA::pack() functionality
+- [X] compression
 	- [X] BPE compression
 	- [X] BPE decompression
-	- [ ] LZ77 compression
+	- [X] LZ77 compression
 	- [X] LZ77 decompression
 - [ ] cleanup
-## Changelog
 
+## Changelog
+`1st December 2023` - v1.0
 ## Comments
 Honestly this just ended up being something I started working on because there weren't any tools that could actually do anything with this, so I decided to make my own.
 

@@ -67,7 +67,7 @@ void FileReader::put(int offset, u32 size, const Buffer& source) {
 void FileReader::write(string name) {
 	std::fstream output(name, std::ios::out | std::ios::binary);
 	if (!output.is_open()) {
-		std::cout << "Failed to write file " + name << std::endl;
+		std::cout << "Failed to write file " + name << "(the file might be being used by some other program?)" << std::endl;
 		return;
 	}
 
