@@ -56,9 +56,13 @@ This value can be input as decimal or hex. To input as hex, just append `0x` to 
 	- [X] LZ77 compression
 	- [X] LZ77 decompression
 - [ ] cleanup
-
+- [ ] finer details
+	- [ ] figure out usage for archive header offset 0x4
+	- [ ] figure out how file entry hashes are calculated
 ## Changelog
 `1st December 2023` - v1.0
+
+
 ## Comments
 Honestly this just ended up being something I started working on because there weren't any tools that could actually do anything with this, so I decided to make my own.
 
