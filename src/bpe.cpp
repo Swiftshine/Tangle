@@ -7,7 +7,7 @@
 
 /* DECOMPRESSION */
 void BPE::decompress(FILE* input, FILE* output) {
-    unsigned char left[256], right[256], stack[30];
+    unsigned char left[256], right[256], stack[1000];
     short int c, count, i, size;
 
     /* unpack each block until end of file */
