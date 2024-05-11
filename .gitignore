@@ -1,16 +1,7 @@
-*.vcxproj*
-x64
-Debug
-Release
-.vs
-
-
 *.gfa
-key*
-keey*
-test*
-yww*
-*.dat
-*.brres
-*.mneb
-gfas lmao
+.vs*
+x64
+*.vcx*
+*.exe
+*.bat
+output/*
