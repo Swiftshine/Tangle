@@ -1,7 +1,7 @@
 #include "tangle.h"
 
 void expand (FILE *input, FILE *output) {
-  unsigned char left[256], right[256], stack[30];
+  unsigned char left[256], right[256], stack[50000];
   short int c, count, i, size;
 
   /* Unpack each block until end of file */
