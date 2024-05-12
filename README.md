@@ -29,6 +29,6 @@ An (experimental) tool for [GFA (GoodFeelArchive) Files](https://swiftshine.gith
 If you are unpacking a file, only the input is specified.
 
 ## Changelog
-`1st December 2023` - v1.0
+`1st December 2023` - v0.1
 
-`11 May 2023` - Rewrite
+`11 May 2023` - Rewrite, v1.0, v1.1
