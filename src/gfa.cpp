@@ -151,22 +151,6 @@ void GFA::unpack(std::string input) {
     temp.open("temp2.bin", std::ios::in | std::ios::binary);
     std::vector<char> decompressed_data(compression_header.decompressedSize);
 
-    // for (int i = 0; i < compression_header.decompressedSize; i++) {
-        // todo - try reading byte-by-byte instead?
-        
-        /*
-        
-        for (int i = 0; i < compressionHeader.decompressedSize; i++) {
-		    tempFile.read((char*)&decompressedData[i], 1);
-	    }
-    */
-        // std::vector<char> buf(file_entries[i].decompressedSize);
-        // temp.read(buf.data(), file_entries[i].decompressedSize);
-        
-        // std::fstream file("output/" + output + "/" + filenames[i], std::ios::out | std::ios::binary);
-        // file.write(buf.data(), file_entries[i].decompressedSize);
-    // }
-
     printf("\n");
 
     for (int i = 0; i < num_files; i++) {
@@ -179,11 +163,10 @@ void GFA::unpack(std::string input) {
 
         std::fstream file("output/" + output + "/" + filenames[i], std::ios::out | std::ios::binary);
         file.write(buf.data(), buf.size());
-        // printf("Decompressed file %s now has a filesize of %d bytes\n", filenames[i].c_str(), buf.size());
         file.close();
     }
     temp.close();
-    //fs::remove("temp2.bin");
+    fs::remove("temp2.bin");
     printf("Finished unpacking %s\n", input.c_str());
 }
 
