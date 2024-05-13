@@ -28,6 +28,11 @@ An (experimental) tool for [GFA (GoodFeelArchive) Files](https://swiftshine.gith
 
 If you are unpacking a file, only the input is specified.
 
+
+## Planned Features
+- [ ] archiving accuracy
+- [ ] signature validation
+- [ ] batch unpack/archive
 ## Changelog
 `1st December 2023` - v1.0
 

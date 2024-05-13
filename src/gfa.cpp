@@ -1,4 +1,5 @@
 #include "tangle.h"
+#include <cassert>
 namespace fs = std::filesystem;
 
 template <typename T>
@@ -7,6 +8,7 @@ void appendData(std::vector<char>& vec, const T& data) {
     vec.insert(vec.end(), bytes, bytes + sizeof(data));
 }
 
+u32 align16(u32 value) { return ((value + 0xF) & ~(0xF)); }
 
 u32 GFA::getHash(std::string filename) {
     u32 result = 0;
@@ -80,6 +82,7 @@ void GFA::unpack(std::string input) {
         std::string filename = getString(input_data, entry.nameOffset & 0x00FFFFFF);
         filenames.push_back(filename);
         file_entries.push_back(entry);
+        // printf("File %s has filesize of %d bytes\n", filename.c_str(), entry.decompressedSize);
     } 
 
     // get compression header
@@ -88,7 +91,7 @@ void GFA::unpack(std::string input) {
 
     // get compressed data
     std::vector<char> compressed_data;
-    compressed_data.insert(compressed_data.begin(), input_data.begin() + gfcp_offset + sizeof(GFA::CompressionHeader), input_data.end());
+    compressed_data.insert(compressed_data.end(), input_data.begin() + gfcp_offset + sizeof(GFA::CompressionHeader), input_data.end());
 
     // decompress all of it before continuing
 
@@ -146,16 +149,41 @@ void GFA::unpack(std::string input) {
     }
 
     temp.open("temp2.bin", std::ios::in | std::ios::binary);
+    std::vector<char> decompressed_data(compression_header.decompressedSize);
+
+    // for (int i = 0; i < compression_header.decompressedSize; i++) {
+        // todo - try reading byte-by-byte instead?
+        
+        /*
+        
+        for (int i = 0; i < compressionHeader.decompressedSize; i++) {
+		    tempFile.read((char*)&decompressedData[i], 1);
+	    }
+    */
+        // std::vector<char> buf(file_entries[i].decompressedSize);
+        // temp.read(buf.data(), file_entries[i].decompressedSize);
+        
+        // std::fstream file("output/" + output + "/" + filenames[i], std::ios::out | std::ios::binary);
+        // file.write(buf.data(), file_entries[i].decompressedSize);
+    // }
+
+    printf("\n");
 
     for (int i = 0; i < num_files; i++) {
         std::vector<char> buf(file_entries[i].decompressedSize);
-        temp.read(buf.data(), file_entries[i].decompressedSize);
-        
+        for (int j = 0; j < buf.size(); j++) {
+            temp.read((char*)&buf[j], 1);
+        }
+
+        temp.seekg(align16(temp.tellg()));
+
         std::fstream file("output/" + output + "/" + filenames[i], std::ios::out | std::ios::binary);
         file.write(buf.data(), buf.size());
+        // printf("Decompressed file %s now has a filesize of %d bytes\n", filenames[i].c_str(), buf.size());
+        file.close();
     }
     temp.close();
-    fs::remove("temp2.bin");
+    //fs::remove("temp2.bin");
     printf("Finished unpacking %s\n", input.c_str());
 }
 
