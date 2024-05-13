@@ -1,6 +1,6 @@
 #include "tangle.h"
 #include <cassert>
-#define DEBUG true
+#define DEBUG false
 
 namespace fs = std::filesystem;
 
