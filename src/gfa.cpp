@@ -1,5 +1,7 @@
 #include "tangle.h"
 #include <cassert>
+#define DEBUG true
+
 namespace fs = std::filesystem;
 
 template <typename T>
@@ -159,14 +161,27 @@ void GFA::unpack(std::string input) {
             temp.read((char*)&buf[j], 1);
         }
 
+        // align the seeker because files are aligned when decompressed
         temp.seekg(align16(temp.tellg()));
+
+        // now we need to account for potential file padding
+        char c = 0;
+        while (temp.read(&c, 1)) {
+            if (c != 0) {
+                // go back 1
+                temp.seekg((u32)temp.tellg() - 1);
+                break;
+            }
+        }
 
         std::fstream file("output/" + output + "/" + filenames[i], std::ios::out | std::ios::binary);
         file.write(buf.data(), buf.size());
         file.close();
     }
     temp.close();
+#if !DEBUG
     fs::remove("temp2.bin");
+#endif
     printf("Finished unpacking %s\n", input.c_str());
 }
 
