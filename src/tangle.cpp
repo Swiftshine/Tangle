@@ -163,9 +163,9 @@ int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outpu
                 while (0 == c) {
                     c = decompressed[currentOffset++];
                 }
+                currentOffset--;
             }
 
-            currentOffset--;
         }
     }
 
