@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <cstdlib>
 #include <fstream>
 #include <filesystem>
 #include <exception>
@@ -30,4 +31,6 @@ namespace tangle {
 
     void bpe_decode(FILE* in, FILE* out);
     void lz77_decompress(FILE* in, FILE* out);
+
+    void file_explorer(const std::string& folderPath);
 }

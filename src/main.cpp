@@ -41,6 +41,7 @@ int main() {
         pfd::message("Tangle", std::to_string(problems) + " file(s) could not be extracted. See error_log.txt for details.", pfd::choice::ok, pfd::icon::warning);
     }
 
+    tangle::file_explorer(outputFolder);
 
     return EXIT_SUCCESS;
 }

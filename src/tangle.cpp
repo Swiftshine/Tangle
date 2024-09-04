@@ -177,3 +177,15 @@ int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outpu
 //     // NOT IMPLEMENTED
 //     return 1;
 // }
+
+void tangle::file_explorer(const std::string& folder) {
+    #if defined(_WIN32) || defined(_WIN64)
+    ShellExecuteA(NULL, "open", folder.c_str(), NULL, NULL, SW_SHOWDEFAULT);
+    #elif defined(__APPLE__)
+    std::string command = "open " + path;
+    std::system(command.c_str());
+    #elif defined(__linux__)
+    std::string command = "xdg-open " + path;
+    std::system(command.c_str());
+    #endif
+}
