@@ -173,10 +173,10 @@ int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outpu
     return problems;
 }
 
-// int tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outputArchive) {
-//     // NOT IMPLEMENTED
-//     return 1;
-// }
+int tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outputArchive, int gfarchVersion) {
+    // NOT IMPLEMENTED (yet)
+    return -1;
+}
 
 void tangle::file_explorer(const std::string& folder) {
     #if defined(_WIN32) || defined(_WIN64)

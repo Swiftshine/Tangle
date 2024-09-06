@@ -19,6 +19,12 @@ typedef int8_t		s8;
 // for most modern platforms running this program
 
 namespace GfArch {
+    enum version {
+        v2      = 0x0200,
+        v3      = 0x0300,
+        v3_1    = 0x0301
+    };
+    
     enum CompressionType {
         None = 0,
         BytePairEncoding = 1,
