@@ -21,7 +21,7 @@ namespace tangle {
 
     // returns the number of problematic files
     int extract(std::vector<std::string>& inputFilepaths, std::string& outputFolderPath);
-    int archive(std::vector<std::string>& inputFilepaths, std::string& outputArchivePath, int gfarchVersion = GfArch::version::v3_1);
+    void archive(std::vector<std::string>& inputFilepaths, std::string& outputArchivePath, int gfarchVersion = GfArch::version::v3_1);
     
     static inline void reset_log() {
         std::ofstream logFile("error_log.txt");

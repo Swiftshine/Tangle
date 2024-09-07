@@ -51,7 +51,7 @@ namespace GfArch {
         u32 mFileInfoOffset;
         u32 mFileInfoSize;
         u32 mCompressionHeaderOffset;
-        u32 mCompressedBlockSize;
+        u32 mCompressedBlockSize; // the size of all data starting with the compression header offset
         u8 padding2[4];
 
         // fields past this point aren't technically part of the header
