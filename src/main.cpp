@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        int problems = tangle::archive(nonArchives, outputPath, version);
+        tangle::archive(nonArchives, outputPath, version);
     }
 
     return EXIT_SUCCESS;
