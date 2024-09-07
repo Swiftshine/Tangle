@@ -165,6 +165,8 @@ int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outpu
 }
 
 int tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outputArchive, int gfarchVersion) {
+    // NOT FINISHED
+    return -1;
     // lz77 compression not implemented yet;
     // once BPE encoding is confirmed to work, this can be implemented
 
