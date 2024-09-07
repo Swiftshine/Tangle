@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    bool doExtract = nonArchives.empty();
+    bool doExtract = !nonArchives.empty();
 
     std::string outputPath;
 
