@@ -21,8 +21,13 @@ namespace tangle {
 
     // returns the number of problematic files
     int extract(std::vector<std::string>& inputFilepaths, std::string& outputFolderPath);
-    // int archive(std::vector<std::string>& inputFilepaths, std::string& outputArchivePath);
+    void archive(std::vector<std::string>& inputFilepaths, std::string& outputArchivePath, int gfarchVersion, int compressionType);
     
+    static inline void reset_log() {
+        std::ofstream logFile("error_log.txt");
+        logFile.close();
+    }
+
     static void log(std::string message) {
         std::ofstream logFile("error_log.txt", std::ios_base::app);
         logFile << message + "\n" << std::endl;
@@ -30,7 +35,8 @@ namespace tangle {
     }
 
     void bpe_decode(FILE* in, FILE* out);
+    void bpe_encode(FILE* in, FILE* out);
     void lz77_decompress(FILE* in, FILE* out);
-
+    void lz77_compress(FILE* in, FILE* out);
     void file_explorer(const std::string& folderPath);
 }
