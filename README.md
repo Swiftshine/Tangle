@@ -2,8 +2,8 @@
 A GoodFeelArchive tool.
 
 ## Special Thanks
-[BPE de/compression source](http://www.pennelynn.com/Documents/CUJ/HTML/94HTML/19940045.HTM)
-
+[BPE decoding source](http://www.pennelynn.com/Documents/CUJ/HTML/94HTML/19940045.HTM)
+[BPE encoding source](https://web.archive.org/web/20160807201159/https://www.csse.monash.edu.au/cluster/RJK/Compress/bpe.c)
 [LZ77 de/compression source](https://github.com/Favrito/LZ77/blob/master/main.c)
 
 ## Building

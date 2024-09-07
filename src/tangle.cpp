@@ -160,7 +160,7 @@ int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outpu
         }
     }
 
-    // fs::remove("temp/");
+    fs::remove("temp/");
     return problems;
 }
 

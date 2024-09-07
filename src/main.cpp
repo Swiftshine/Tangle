@@ -60,10 +60,10 @@ int main(int argc, char* argv[]) {
 
         if (0 == problems) {
             pfd::message("Tangle", "Successfully extracted file(s).", pfd::choice::ok, pfd::icon::info);
+            fs::remove("error_log.txt");
         } else {
             pfd::message("Tangle", std::to_string(problems) + " file(s) could not be extracted. See error_log.txt for details.", pfd::choice::ok, pfd::icon::warning);
         }
-
         tangle::file_explorer(outputPath);
     } else {
         outputPath = pfd::save_file("Select output file", "", { "GfArch Files (*.gfa)", "*.gfa" }, pfd::opt::force_overwrite).result();
@@ -98,6 +98,7 @@ int main(int argc, char* argv[]) {
         tangle::archive(nonArchives, outputPath, version);
         pfd::message("Tangle", "Successfully archived file(s).", pfd::choice::ok, pfd::icon::info);
         tangle::file_explorer(fs::path(outputPath).parent_path().string());
+        fs::remove("error_log.txt");
     }
 
     return EXIT_SUCCESS;
