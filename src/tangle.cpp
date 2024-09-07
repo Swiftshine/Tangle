@@ -1,15 +1,8 @@
 #include "tangle.h"
 
-u32 checksum(std::string& s) {
-    u32 result = 0;
-    
-    for (char c : s) {
-        if (0 == c) break;
-
-        result = c + (result * 137);
-    }
-
-    return result;
+template <typename T>
+inline void write(std::ofstream& out, T value) {
+    out.write((char*)&value, sizeof(T));
 }
 
 std::string getstring(std::vector<char>& archive, u32 offset) {
@@ -34,8 +27,8 @@ inline void align16(u32& value) {
 }
 
 int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outputFolderPath) {
-    auto problems = 0;
-    for (std::string inputPath : inputFilepaths) {
+    int problems = 0;
+    for (std::string& inputPath : inputFilepaths) {
 
         // get archive contents
         std::ifstream in(inputPath, std::ios::binary);
@@ -103,11 +96,9 @@ int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outpu
                 fs::create_directory("temp");
             }
             
-            if (!fs::exists("temp/temp1.bin")) {
-                std::ofstream temp("temp/temp1.bin", std::ios::binary);
-                temp.write(compressed.data(), compressed.size());
-                temp.close();
-            }
+            std::ofstream temp("temp/temp1.bin", std::ios::binary);
+            temp.write(compressed.data(), compressed.size());
+            temp.close();
         }
         // decode/decompress data
         {
@@ -133,7 +124,7 @@ int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outpu
             in.close();
 
             fs::remove("temp/temp1.bin");
-            fs::remove("temp/temp2.bin");
+            // fs::remove("temp/temp2.bin");
         }
 
 
@@ -169,13 +160,134 @@ int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outpu
         }
     }
 
-    fs::remove("temp/");
+    // fs::remove("temp/");
     return problems;
 }
 
 int tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outputArchive, int gfarchVersion) {
-    // NOT IMPLEMENTED (yet)
-    return -1;
+    // lz77 compression not implemented yet;
+    // once BPE encoding is confirmed to work, this can be implemented
+
+    int problems = 0;
+    u32 currentOffset = 0; // keep track of where we are in the archive
+
+    // set up header; zero out everything
+
+    GfArch::Header header { 0 };
+
+    std::memcpy(header.mMagic, "GFAC", 4);
+    header.mVersion = gfarchVersion;
+    header.mIsCompressed = true;
+    header.mFileInfoOffset = 0x2C;
+    header.mFileInfoSize = sizeof(u32) + (sizeof(GfArch::FileEntry) * inputFilepaths.size());
+    for (std::string& inputPath : inputFilepaths) {
+        header.mFileInfoSize = inputPath.length() + 1; // account for null terminator
+    }
+    header.mFileCount = inputFilepaths.size();
+    header.mCompressionHeaderOffset = sizeof(GfArch::Header) + header.mFileInfoSize;
+    align16(header.mCompressionHeaderOffset);
+
+    // the following is to be calculated later
+    header.mCompressedBlockSize;
+
+    currentOffset += sizeof(GfArch::Header);
+
+    // setup file entries
+
+    std::vector<GfArch::FileEntry> entries;
+    
+    std::vector<char> uncompressed;
+
+    u32 uncompressedOffset = 0;
+    u32 nameOffset = sizeof(GfArch::Header) + (sizeof(GfArch::FileEntry) * inputFilepaths.size());
+    for (std::string& inputPath : inputFilepaths) {
+        GfArch::FileEntry entry { 0 };
+
+        entry.mChecksum = GfArch::checksum(fs::path(inputPath).filename().string());
+        entry.mDecompressedSize = fs::file_size(inputPath);
+        entry.mNameOffset = nameOffset;
+        nameOffset += inputPath.length() + 1;
+        // the following is to be calculated later
+        entry.mDecompressedDataOffset;
+
+        entries.push_back(entry);
+
+        uncompressedOffset = uncompressed.size();
+        uncompressed.resize(uncompressed.size() + entry.mDecompressedSize);
+
+        std::ifstream f(inputPath, std::ios::binary);
+        for (auto i = uncompressedOffset; i < uncompressedOffset + entry.mDecompressedSize; i++) {
+            f.read(&uncompressed[i], 1);
+        }
+        f.close();
+    }
+
+    // setup compression header
+    
+    GfArch::CompressionHeader cHeader { 0 };
+    std::memcpy(cHeader.mMagic, "GFCP", 4);
+    cHeader.m_4 = 1;
+    cHeader.mCompressionType = GfArch::CompressionType::BytePairEncoding;
+    cHeader.mCompressedDataSize = uncompressed.size();
+
+    // to be calculated later
+    cHeader.mCompressedDataSize;
+
+    // reminder, files in this format are first concated
+    // and then are encoded/compressed. we already concated all files
+
+    std::vector<char> compressed;
+    {
+        if (!fs::exists("temp")) {
+            fs::create_directory("temp");
+        }
+
+        std::ofstream temp("temp/temp1.bin", std::ios::binary);
+        temp.write(uncompressed.data(), uncompressed.size());
+        temp.close();
+    }
+    // encode/compress data
+    {
+        FILE* t1 = fopen("temp/temp1.bin", "rb");
+        FILE* t2 = fopen("temp/temp2.bin", "wb");
+
+
+        switch (cHeader.mCompressionType) {
+            case GfArch::CompressionType::BytePairEncoding:
+                tangle::bpe_encode(t1, t2);
+                break;
+            case 2:
+            case GfArch::CompressionType::LZ77:
+                break;
+        }
+
+        fclose(t1);
+        fclose(t2);
+
+        std::ifstream in("temp/temp2.bin", std::ios::binary);
+        compressed = std::vector<char>((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+        in.close();
+
+        fs::remove("temp/temp1.bin");
+        fs::remove("temp/temp2.bin");
+    }
+
+
+    // let's go back and make calculations
+
+    header.mCompressedBlockSize = compressed.size() + sizeof(GfArch::CompressionHeader);
+
+    // done with header
+
+    // start writing data
+    std::ofstream out(outputArchive, std::ios::binary);
+    
+    write(out, header);
+
+
+    out.close();
+    fs::remove("temp");
+    return problems;
 }
 
 void tangle::file_explorer(const std::string& folder) {

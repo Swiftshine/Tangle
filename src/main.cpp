@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 
         tangle::file_explorer(outputPath);
     } else {
-        outputPath = pfd::save_file("Select output file", "", { "GfArch Files (*.gfa)", "*.gfa" }, true).result();
+        outputPath = pfd::save_file("Select output file", "", { "GfArch Files (*.gfa)", "*.gfa" }, pfd::opt::force_overwrite).result();
 
         if (outputPath.empty()) {
             // default behaviour is to use the first filename

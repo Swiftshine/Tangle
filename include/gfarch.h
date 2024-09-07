@@ -19,12 +19,24 @@ typedef int8_t		s8;
 // for most modern platforms running this program
 
 namespace GfArch {
+    static inline u32 checksum(std::string s) {
+        u32 result = 0;
+
+        for (char c : s) {
+            if (0 == c) break;
+
+            result = c + (result * 137);
+        }
+
+        return result;
+    }
+
     enum version {
         v2      = 0x0200,
         v3      = 0x0300,
         v3_1    = 0x0301
     };
-    
+
     enum CompressionType {
         None = 0,
         BytePairEncoding = 1,
@@ -55,7 +67,9 @@ namespace GfArch {
         u32 mChecksum;
         u32 mNameOffset;
         u32 mDecompressedSize;
-        u32 mCompressedDataOffset;
+        u32 mDecompressedDataOffset; // calculated as if the compression header isn't present.
+        // you can verify by decompressing and concatenating data (padded to 0x10),
+        // then subtract the compression header's offset to match this offset.
     };
 
     static_assert(0x10 == sizeof(FileEntry), "GfArch::FileEntry size mismatch");

@@ -35,6 +35,7 @@ namespace tangle {
     }
 
     void bpe_decode(FILE* in, FILE* out);
+    void bpe_encode(FILE* in, FILE* out);
     void lz77_decompress(FILE* in, FILE* out);
 
     void file_explorer(const std::string& folderPath);
