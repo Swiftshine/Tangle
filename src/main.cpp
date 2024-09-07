@@ -96,6 +96,8 @@ int main(int argc, char* argv[]) {
         }
 
         tangle::archive(nonArchives, outputPath, version);
+        pfd::message("Tangle", "Successfully archived file(s).", pfd::choice::ok, pfd::icon::info);
+        tangle::file_explorer(fs::path(outputPath).parent_path().string());
     }
 
     return EXIT_SUCCESS;

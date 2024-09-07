@@ -205,8 +205,6 @@ void tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outp
         std::ofstream temp("temp/temp1.bin", std::ios::binary);
         temp.write(decompressed.data(), decompressed.size());
         temp.close();
-
-        std::cout << "temp1.bin size: " << decompressed.size() << std::endl;
     }
     {
         FILE* t1 = fopen("temp/temp1.bin", "rb");
@@ -230,9 +228,9 @@ void tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outp
         compressed = std::vector<char>((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
         f.close();
 
-        // fs::remove("temp/temp1.bin");
-        // fs::remove("temp/temp2.bin");
-        // fs::remove("temp");
+        fs::remove("temp/temp1.bin");
+        fs::remove("temp/temp2.bin");
+        fs::remove("temp");
     }
 
     std::ofstream out = std::ofstream(outputArchive, std::ios::binary);
@@ -263,12 +261,19 @@ void tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outp
     // write file entries
 
     u32 nameOffset = sizeof(GfArch::Header) + (sizeof(GfArch::FileEntry) * filecount);
-    u32 decompressedOffset = 0;
+    u32 decompressedOffset = header.mCompressionHeaderOffset;
     for (auto i = 0; i < filecount; i++) {
         GfArch::FileEntry entry;
 
         entry.mChecksum = GfArch::checksum(filenames[i]);
         entry.mNameOffset = nameOffset;
+
+        // check if this is the last entry
+
+        if (filecount - 1 == i) {
+            entry.mNameOffset |= 0x80000000;
+        }
+
         nameOffset += filenames[i].length() + 1;
         entry.mDecompressedSize = fs::file_size(inputFilepaths[i]);
         entry.mDecompressedDataOffset = decompressedOffset;

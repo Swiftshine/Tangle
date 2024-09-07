@@ -64,7 +64,7 @@ namespace GfArch {
     static_assert(0x30 == sizeof(Header), "GfArch::Header size mismatch");
 
     struct FileEntry {
-        u32 mChecksum;
+        u32 mChecksum; // if this entry is the last one, a flag of 0x80000000 is applied.
         u32 mNameOffset;
         u32 mDecompressedSize;
         u32 mDecompressedDataOffset; // calculated as if the compression header isn't present.
