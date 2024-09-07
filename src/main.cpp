@@ -5,7 +5,7 @@ enum args {
     INPUT_VERSION
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     // check that a pfd backend is available
     if (!pfd::settings::available()) {
         std::cerr << "portable-file-dialogs is not available on this platform.\n";
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
         "All Files (*.*)", "*.*"
     };
 
-    std::vector<std::string> inputFiles = pfd::open_file("Select GfArch file(s)", ".", filters, pfd::opt::multiselect).result();
+    std::vector<std::string> inputFiles = pfd::open_file("Select file(s)", ".", filters, pfd::opt::multiselect).result();
 
     if (inputFiles.empty()) {
         // user cancelled
@@ -36,12 +36,12 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> nonArchives;
 
     for (std::string& filepath : inputFiles) {
-        if (std::string::npos != filepath.find(".gfa")) {
+        if (std::string::npos == filepath.find(".gfa")) {
             nonArchives.push_back(filepath);
         }
     }
 
-    bool doExtract = !nonArchives.empty();
+    bool doExtract = nonArchives.empty();
 
     std::string outputPath;
 
@@ -70,7 +70,11 @@ int main(int argc, char *argv[]) {
 
         if (outputPath.empty()) {
             // default behaviour is to use the first filename
-            outputPath = inputFiles[0];
+            outputPath = nonArchives[0];
+        }
+
+        if (std::string::npos == outputPath.find(".gfa")) {
+            outputPath += ".gfa";
         }
 
         tangle::reset_log();
@@ -79,7 +83,7 @@ int main(int argc, char *argv[]) {
         // GfArch 3.0 will be the default
         int version = GfArch::version::v3;
 
-        if (2 > argc) {
+        if (2 == argc) {
             std::string inputVersion = argv[INPUT_VERSION];
 
             if ("2.0" == inputVersion) {

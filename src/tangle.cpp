@@ -187,7 +187,9 @@ void tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outp
 
         for (std::string& inputPath : inputFilepaths) {
             std::ifstream f(inputPath, std::ios::binary);
-            decompressed.insert(decompressed.end(), (std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+            std::vector<char> v = std::vector<char>((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+
+            decompressed.insert(decompressed.end(), v.begin(), v.end());
             f.close();
 
             // align data size to next 16 byte boundary
@@ -203,6 +205,8 @@ void tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outp
         std::ofstream temp("temp/temp1.bin", std::ios::binary);
         temp.write(decompressed.data(), decompressed.size());
         temp.close();
+
+        std::cout << "temp1.bin size: " << decompressed.size() << std::endl;
     }
     {
         FILE* t1 = fopen("temp/temp1.bin", "rb");
@@ -226,9 +230,9 @@ void tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outp
         compressed = std::vector<char>((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
         f.close();
 
-        fs::remove("temp/temp1.bin");
-        fs::remove("temp/temp2.bin");
-        fs::remove("temp");
+        // fs::remove("temp/temp1.bin");
+        // fs::remove("temp/temp2.bin");
+        // fs::remove("temp");
     }
 
     std::ofstream out = std::ofstream(outputArchive, std::ios::binary);
@@ -276,7 +280,9 @@ void tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outp
     // write filenames
 
     for (std::string& name : filenames) {
-        out << name << "\0";
+        const char zero = '\0';
+        out << name;
+        out.write(&zero, 1);
     }
 
 
