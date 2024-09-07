@@ -5,7 +5,7 @@ enum args {
     INPUT_VERSION
 };
 
-int main(int argc, char* argv[]) {
+int main() {
     // check that a pfd backend is available
     if (!pfd::settings::available()) {
         std::cerr << "portable-file-dialogs is not available on this platform.\n";
@@ -77,27 +77,49 @@ int main(int argc, char* argv[]) {
             outputPath += ".gfa";
         }
 
+
+        // get version
+        int version;
+        std::cout << "Select an archive version. See README for details.\n";
+        int compressionType = GfArch::CompressionType::BytePairEncoding;
+
+        std::string input;
+        while (true) {
+            input = "";
+            std::cin >> input;
+
+            if ("2.0" == input) {
+                version = GfArch::version::v2;
+                break;
+            } else if ("3.0" == input) {
+                version = GfArch::version::v3;
+                break;
+            } else if ("3.1a" == input) {
+                version = GfArch::version::v3_1;
+                break;
+            } else if ("3.1b" == input) {
+                version = GfArch::version::v3_1;
+                compressionType = GfArch::CompressionType::LZ77;
+                break;
+            }
+
+            if (input.empty()) {
+                // assume 3.0, BPE
+                version = GfArch::version::v3;
+                break;
+            }
+
+            std::cout << "Invalid input. Try again.\n";
+        }
+        
         tangle::reset_log();
 
+        tangle::archive(nonArchives, outputPath, version, compressionType);
 
-        // GfArch 3.0 will be the default
-        int version = GfArch::version::v3;
-
-        if (2 == argc) {
-            std::string inputVersion = argv[INPUT_VERSION];
-
-            if ("2.0" == inputVersion) {
-                version = GfArch::version::v2;
-            } else if ("3.0" == inputVersion) {
-                version = GfArch::version::v3;
-            } else if ("3.1" == inputVersion) {
-                version = GfArch::version::v3_1;
-            }
-        }
-
-        tangle::archive(nonArchives, outputPath, version);
         pfd::message("Tangle", "Successfully archived file(s).", pfd::choice::ok, pfd::icon::info);
+
         tangle::file_explorer(fs::path(outputPath).parent_path().string());
+
         fs::remove("error_log.txt");
     }
 

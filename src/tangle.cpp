@@ -10,11 +10,10 @@ std::string getstring(std::vector<char>& archive, u32 offset) {
 
     std::string result = "";
 
-    while (0 != *(archive.begin() + offset)) {
-        result += *(archive.begin() + offset++);
+    while (0 != archive[offset]) {
+        result += archive[offset++];
     }
 
-    result += '\0';
     return result;
 }
 
@@ -24,6 +23,10 @@ std::string strippath(std::string& path) {
 
 inline void align16(u32& value) {
     value = ((value + 0xF) & ~(0xF));
+}
+
+inline void align32(u32& value) {
+    value = ((value + 0x1F) & ~(0x1F));
 }
 
 int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outputFolderPath) {
@@ -123,8 +126,9 @@ int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outpu
             decompressed = std::vector<char>((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
             in.close();
 
-            fs::remove("temp/temp1.bin");
-            // fs::remove("temp/temp2.bin");
+            if (fs::exists("temp")) {
+                fs::remove_all("temp");
+            }
         }
 
 
@@ -160,11 +164,10 @@ int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outpu
         }
     }
 
-    fs::remove("temp/");
     return problems;
 }
 
-void tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outputArchive, int gfarchVersion) {
+void tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outputArchive, int gfarchVersion, int compressionType) {
     // lz77 compression not implemented yet;
     // once BPE encoding is confirmed to work, this can be implemented
 
@@ -210,14 +213,14 @@ void tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outp
         FILE* t1 = fopen("temp/temp1.bin", "rb");
         FILE* t2 = fopen("temp/temp2.bin", "wb");
 
-        // until i implement LZ77, assume BPE
-        int ctype = 1;
-        switch (ctype) {
+        switch (compressionType) {
             case GfArch::CompressionType::BytePairEncoding:
                 tangle::bpe_encode(t1, t2);
                 break;
             case 2:
             case GfArch::CompressionType::LZ77:
+                // not guaranteed to work!
+                tangle::lz77_compress(t1, t2);
                 break;
         }
 
@@ -228,9 +231,9 @@ void tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outp
         compressed = std::vector<char>((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
         f.close();
 
-        fs::remove("temp/temp1.bin");
-        fs::remove("temp/temp2.bin");
-        fs::remove("temp");
+        if (fs::exists("temp")) {
+                fs::remove_all("temp");
+        }
     }
 
     std::ofstream out = std::ofstream(outputArchive, std::ios::binary);
@@ -251,7 +254,7 @@ void tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outp
     }
 
     header.mCompressionHeaderOffset = sizeof(GfArch::Header) + header.mFileInfoSize;
-    align16(header.mCompressionHeaderOffset);
+    align32(header.mCompressionHeaderOffset);
     header.mCompressedBlockSize = compressed.size() + sizeof(GfArch::CompressionHeader);
     header.mFileCount = filecount;
 
@@ -303,8 +306,7 @@ void tangle::archive(std::vector<std::string>& inputFilepaths, std::string& outp
 
     std::memcpy(cHeader.mMagic, "GFCP", 4);
     cHeader.m_4 = 1;
-    // until i implement LZ77, assume BPE
-    cHeader.mCompressionType = GfArch::CompressionType::BytePairEncoding;
+    cHeader.mCompressionType = compressionType;
     cHeader.mDecompressedDataSize = decompressed.size();
     cHeader.mCompressedDataSize = compressed.size();
 
