@@ -13,3 +13,4 @@ error_log.txt
 .DS_Store
 *.sh
 tangle
+*.zip

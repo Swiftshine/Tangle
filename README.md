@@ -18,7 +18,7 @@ There are multiple revisions of the GfArch format.
 
 Before creating an archive, the user must specify the archive version by typing `2.0`, `3.0`, `3.1a`, or `3.1b`.
 
-Archive creation with LZ77 is not guaranteed to work.
+Operations involving LZ77 are by no means guaranteed to work.
 
 ### Todo - additional GfArch confirmations
 Check the following:
