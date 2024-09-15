@@ -134,9 +134,6 @@ int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outpu
 
         // write files
 
-        // we can reuse this var
-        currentOffset = 0;
-        
         for (auto i = 0; i < entries.size(); i++) {
             GfArch::FileEntry& entry = entries[i];
             std::string filepath = inputPath.substr(0, inputPath.length() - std::string(".gfa").length());
@@ -144,23 +141,8 @@ int tangle::extract(std::vector<std::string>& inputFilepaths, std::string& outpu
 
             fs::create_directories(fs::path(filepath).parent_path());
             std::ofstream out(filepath, std::ios::binary);
-            out.write(&decompressed[currentOffset], entry.mDecompressedSize);
+            out.write(&decompressed[entry.mDecompressedDataOffset - header.mCompressionHeaderOffset], entry.mDecompressedSize);
             out.close();
-
-            currentOffset += entry.mDecompressedSize;
-
-            align16(currentOffset);
-
-            // account for potential padding
-
-            if (GfArch::CompressionType::BytePairEncoding == cHeader.mCompressionType) {
-                char c = 0;
-                while (0 == c) {
-                    c = decompressed[currentOffset++];
-                }
-                currentOffset--;
-            }
-
         }
     }
 
