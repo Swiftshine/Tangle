@@ -1,16 +1,2 @@
+target/
 *.gfa
-.vs*
-x64
-*.vcx*
-*.exe
-*.bat
-output/
-release/
-*.bin
-test/
-temp/
-error_log.txt
-.DS_Store
-*.sh
-tangle
-*.zip

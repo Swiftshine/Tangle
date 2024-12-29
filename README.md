@@ -1,30 +1,45 @@
 # Tangle
-A GoodFeelArchive tool.
-
-## Special Thanks
-- [BPE decoding source](http://www.pennelynn.com/Documents/CUJ/HTML/94HTML/19940045.HTM)
-- [BPE encoding source](https://web.archive.org/web/20160807201159/https://www.csse.monash.edu.au/cluster/RJK/Compress/bpe.c)
-- [LZ77 de/compression source](https://github.com/Favrito/LZ77/blob/master/main.c)
+A Good-Feel archive tool.
+Documentation on the format can be found [here](https://swiftshine.github.io/doc/gfa.html).
 
 ## Usage
-There are multiple revisions of the GfArch format.
-| Version | Game | Compression |
-| - | - | - |
-| 2.0 | <em>Wario Land: Shake It!</em> | Byte Pair Encoding |
-| 3.0 | <em>Kirby's Epic Yarn</em> | Byte Pair Encoding |
-| 3.1a | <em>Yoshi's Woolly World | Byte Pair Encoding |
-| 3.1b | <em>Poochy & Yoshi's Woolly World | LZ77 |
-| 3.1b | <em>Kirby's Extra Epic Yarn</em> | LZ77 |
+Use `tangle -h` or `tangle -help` to get a list of needed arguments.
 
-Before creating an archive, the user must specify the archive version by typing `2.0`, `3.0`, `3.1a`, or `3.1b`.
+### Extracting an archive
+```
+tangle extract my_file.gfa
+```
+or
+```
+tangle extract my_file.gfa my_folder
+```
 
-Operations involving LZ77 are by no means guaranteed to work.
+### Creating an archive
+Good-Feel archives are created with Byte Pair Encoding (`bpe`) or LZ10/LZ77 (`lz77`). At the moment, only archives with Byte Pair Encoding can be created with this tool.
 
-### Todo - additional GfArch confirmations
+Here is an example of a GfArch v3 archive being created:
+```
+tangle archive my_folder my_file.gfa v3 bpe
+```
+
+The same example, but for GfArch v3.1:
+```
+tangle archive my_folder my_file.gfa v3-1 bpe
+```
+
+If you are targeting a specific game, the version and compression types are as follows:
+
+| Version | Game | Compression | Tangle Arg |
+| - | - | - | - |
+| 2.0 | <em>Wario Land: Shake It!</em> | Byte Pair Encoding | v2 | 
+| 3.0 | <em>Kirby's Epic Yarn</em> | Byte Pair Encoding | v3 |
+| 3.1 | <em>Yoshi's Woolly World | Byte Pair Encoding | v3-1|
+| 3.1 | <em>Poochy & Yoshi's Woolly World | LZ77 | v3-1 |
+| 3.1 | <em>Kirby's Extra Epic Yarn</em> | LZ77 | v3-1 |
+
+
+#### Todo - additional GfArch confirmations
 Check the following:
 - Looksley's Line Up (version: 3.0, compression: unknown)
 - Mii Plaza (version: 3.1? compression: bpe?)
 - Other Good-Feel titles that use GfArch
-
-## Building
-This project uses [portable-file-dialogs](https://github.com/samhocevar/portable-file-dialogs). Be sure to include any necessary libraries for the file dialogs. For example, Windows requires `ole32`, `comctl32`, `oleaut32`, and `uuid`.
