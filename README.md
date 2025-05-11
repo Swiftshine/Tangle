@@ -15,7 +15,7 @@ tangle extract my_file.gfa my_folder
 ```
 
 ### Creating an archive
-Good-Feel archives are created with Byte Pair Encoding (`bpe`) or LZ10/LZ77 (`lz77`). At the moment, only archives with Byte Pair Encoding can be created with this tool.
+Good-Feel archives are created with Byte Pair Encoding (`bpe`) or LZ10 (`lz10`).
 
 Here is an example of a GfArch v3 archive being created:
 ```
@@ -34,8 +34,8 @@ If you are targeting a specific game, the version and compression types are as f
 | 2.0 | <em>Wario Land: Shake It!</em> | Byte Pair Encoding | v2 | 
 | 3.0 | <em>Kirby's Epic Yarn</em> | Byte Pair Encoding | v3 |
 | 3.1 | <em>Yoshi's Woolly World | Byte Pair Encoding | v3-1|
-| 3.1 | <em>Poochy & Yoshi's Woolly World | LZ77 | v3-1 |
-| 3.1 | <em>Kirby's Extra Epic Yarn</em> | LZ77 | v3-1 |
+| 3.1 | <em>Poochy & Yoshi's Woolly World | LZ10 | v3-1 |
+| 3.1 | <em>Kirby's Extra Epic Yarn</em> | LZ10 | v3-1 |
 
 
 #### Todo - additional GfArch confirmations

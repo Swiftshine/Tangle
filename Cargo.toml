@@ -1,10 +1,10 @@
 [package]
 name = "tangle"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.95"
-clap = { version = "4.5.23", features = ["derive"] }
-colored = "2.2.0"
-gfarch = "0.2.3"
+anyhow = "1.0.98"
+clap = { version = "4.5.38", features = ["derive"] }
+colored = "3.0.0"
+gfarch = "0.3.0"

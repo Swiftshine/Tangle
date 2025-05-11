@@ -1,7 +1,6 @@
 use clap::{Parser, ValueEnum};
 use gfarch::gfarch;
 use anyhow::Result;
-use ::gfarch::gfarch::FileContents;
 use std::{fs, path::Path};
 use colored::*;
 use std::num::ParseIntError;
@@ -24,7 +23,7 @@ enum ToolUsage {
 #[derive(Debug, Clone, ValueEnum)]
 enum CompressionType {
     BPE,
-    LZ77
+    LZ10
 }
 
 #[derive(Parser, Debug)]
@@ -85,9 +84,9 @@ fn main() -> Result<()> {
             let mut num_errors = 0usize;
             let num_files = extracted.len();
             for file in extracted {
-                let result = fs::write(folder_name.to_string() + &file.filename, file.contents);
+                let result = fs::write(folder_name.to_string() + &file.0, file.1);
                 if let Err(e) = result {
-                    eprintln!("{} '{}' {}. Error: {}", "Failed to write the contents of".yellow(), file.filename, "to disk.".yellow(), e);
+                    eprintln!("{} '{}' {}. Error: {}", "Failed to write the contents of".yellow(), file.0, "to disk.".yellow(), e);
                     num_errors += 1;
                 }
             }
@@ -124,13 +123,8 @@ fn main() -> Result<()> {
             
             let compression_type = args.compression_type.unwrap();
             
-            if matches!(compression_type, CompressionType::LZ77) {
-                eprintln!("{}", "The LZ77/LZ10 format currently has no archive creation support.".red());
-                std::process::exit(1);
-            }
-            
             // read file contents
-            let mut files = Vec::<gfarch::FileContents>::new();
+            let mut files: Vec<(String, Vec<u8>)> = Vec::new();
             
             let mut num_errors = 0;
             for entry in fs::read_dir(&args.input)? {
@@ -143,7 +137,7 @@ fn main() -> Result<()> {
                 let filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
                 let contents = fs::read(path)?;
                 
-                files.push(FileContents { filename, contents} );
+                files.push((filename, contents));
             }
             
             if files.len() == 0 {
@@ -154,7 +148,7 @@ fn main() -> Result<()> {
             // convert to something for the gfarch crate to use
             let compression_type = match compression_type {
                 CompressionType::BPE => gfarch::CompressionType::BPE,
-                _ => unreachable!("The compression type can currently only be BPE.")
+                CompressionType::LZ10 => gfarch::CompressionType::LZ10,
             };
             
             let archive_version = match archive_version {
