@@ -15,7 +15,7 @@ tangle extract my_file.gfa my_folder
 ```
 
 ### Creating an archive
-Good-Feel archives are created with Byte Pair Encoding (`bpe`) or LZ10 (`lz10`).
+Good-Feel archives are created with Byte Pair Encoding (`bpe`), LZ10 (`lz10`), or no compression at all (leave blank, or `none`).
 
 Here is an example of a GfArch v3 archive being created:
 ```
