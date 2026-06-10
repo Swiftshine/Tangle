@@ -248,9 +248,9 @@ dependencies = [
 
 [[package]]
 name = "gfarch"
-version = "0.3.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98b8b4d17edd9884fdd9da57110500ee1d629b90dc6b34906344f343f28bb115"
+checksum = "731668598456a490ad3adbae8dec5923f44b4d1ba1da3f9e8011d54084889e02"
 dependencies = [
  "bpe-rs",
  "byteorder",
@@ -486,7 +486,7 @@ dependencies = [
 
 [[package]]
 name = "tangle"
-version = "0.1.2"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap 4.6.1",

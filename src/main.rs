@@ -10,8 +10,6 @@ enum ArchiveVersion {
     V2,
     V3,
     V3_1,
-    // V3_1a,
-    // V3_1b, // not supported yet
 }
 
 #[derive(Debug, Clone, ValueEnum)]
@@ -22,6 +20,7 @@ enum ToolUsage {
 
 #[derive(Debug, Clone, ValueEnum)]
 enum CompressionType {
+    None,
     BPE,
     LZ10,
 }
@@ -38,6 +37,7 @@ struct Args {
     /// The version to be used when creating an archive.
     archive_version: Option<ArchiveVersion>,
     /// The compression to be used when creating an archive.
+    #[arg(default_value = "none")]
     compression_type: Option<CompressionType>,
     /// The GFCP offset to be used, if needed. Hexadecimal format is supported.
     gfcp_offset: Option<String>,
@@ -131,12 +131,7 @@ fn main() -> Result<()> {
 
             let archive_version = args.archive_version.unwrap();
 
-            if args.compression_type.is_none() {
-                eprintln!("{}", "A compression type is required.".red());
-                std::process::exit(1);
-            }
-
-            let compression_type = args.compression_type.unwrap();
+            let compression_type = args.compression_type.unwrap_or(CompressionType::None);
 
             // read file contents
             let mut files: Vec<(String, Vec<u8>)> = Vec::new();
@@ -173,6 +168,7 @@ fn main() -> Result<()> {
 
             // convert to something for the gfarch crate to use
             let compression_type = match compression_type {
+                CompressionType::None => gfarch::CompressionType::None,
                 CompressionType::BPE => gfarch::CompressionType::BPE,
                 CompressionType::LZ10 => gfarch::CompressionType::LZ10,
             };
