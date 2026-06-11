@@ -248,9 +248,9 @@ dependencies = [
 
 [[package]]
 name = "gfarch"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "731668598456a490ad3adbae8dec5923f44b4d1ba1da3f9e8011d54084889e02"
+checksum = "c86d270be1977ffeb5ad0ef849ec1cb11cee3d6f12b7f4914cff4df90652bfb1"
 dependencies = [
  "bpe-rs",
  "byteorder",

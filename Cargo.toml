@@ -7,4 +7,4 @@ edition = "2021"
 anyhow = "1.0.98"
 clap = { version = "4.5.38", features = ["derive"] }
 crossterm = "0.29.0"
-gfarch = "0.4.0"
+gfarch = "0.4.1"
