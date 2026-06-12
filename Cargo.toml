@@ -1,10 +1,10 @@
 [package]
 name = "tangle"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 [dependencies]
 anyhow = "1.0.98"
 clap = { version = "4.5.38", features = ["derive"] }
 crossterm = "0.29.0"
-gfarch = "0.4.1"
+gfarch = { version = "0.6.0", features = ["zlib"] }

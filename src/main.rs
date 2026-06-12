@@ -1,21 +1,21 @@
 use anyhow::Result;
-use clap::{Parser, ValueEnum};
+use clap::{Parser, ValueEnum, Subcommand};
 use crossterm::style::Stylize;
-use gfarch::gfarch;
+use gfarch;
 use std::num::ParseIntError;
-use std::{fs, path::Path};
+use std::fs;
+use std::path::PathBuf;
+
+/* Options */
 
 #[derive(Debug, Clone, ValueEnum)]
-enum ArchiveVersion {
+enum Version {
+    #[value(name = "2.0", aliases = ["2"])]
     V2,
+    #[value(name = "3.0", aliases = ["3"])]
     V3,
+    #[value(name = "3.1")]
     V3_1,
-}
-
-#[derive(Debug, Clone, ValueEnum)]
-enum ToolUsage {
-    Extract, // To extract an archive's contents
-    Archive, // To create an archive
 }
 
 #[derive(Debug, Clone, ValueEnum)]
@@ -23,35 +23,40 @@ enum CompressionType {
     None,
     BPE,
     LZ10,
+    Zlib,
 }
 
-#[derive(Parser, Debug)]
+/* Command-line */
+
+#[derive(Subcommand)]
+enum Command {
+    Extract {
+        input: PathBuf,
+        output: Option<PathBuf>,
+    },
+    
+    Archive {
+        input: PathBuf,
+        output: PathBuf,
+        version: Version,
+        compression_type: CompressionType,
+
+        #[arg(short = 'o', long, value_parser = parse_hex)]
+        gfcp_offset: Option<usize>,
+
+        #[arg(short, long, value_parser = parse_hex)]
+        alignment: Option<usize>,
+    },
+}
+
+#[derive(Parser)]
 #[command(name = "tangle")]
-struct Args {
-    /// Tool usage.
-    usage: ToolUsage,
-    /// The input file or folder.
-    input: String,
-    /// The output file or folder. Required when creating an archive.
-    output: Option<String>,
-    /// The version to be used when creating an archive.
-    archive_version: Option<ArchiveVersion>,
-    /// The compression to be used when creating an archive.
-    #[arg(default_value = "none")]
-    compression_type: Option<CompressionType>,
-    /// The GFCP offset to be used, if needed. Hexadecimal format is supported.
-    gfcp_offset: Option<String>,
+struct Cli {
+    #[command(subcommand)]
+    command: Command,
 }
 
-fn file_to_folder(file_name: &str) -> String {
-    let path = Path::new(file_name);
-    match path.file_stem() {
-        Some(stem) => stem.to_string_lossy().to_string(),
-        None => file_name.to_string(), // fallback if there's no stem
-    }
-}
-
-fn parse_offset(s: &str) -> Result<usize, ParseIntError> {
+fn parse_hex(s: &str) -> Result<usize, ParseIntError> {
     if s.starts_with("0x") || s.starts_with("0X") {
         u64::from_str_radix(&s[2..], 16).map(|x| x as usize)
     } else {
@@ -60,34 +65,33 @@ fn parse_offset(s: &str) -> Result<usize, ParseIntError> {
 }
 
 fn main() -> Result<()> {
-    let args = Args::parse();
+    let cli = Cli::parse();
 
-    match args.usage {
-        ToolUsage::Extract => {
+    match cli.command {
+        Command::Extract { input, output } => {
             // extract file contents
-            let archive = fs::read(&args.input)?;
+            let archive = fs::read(&input)?;
             let extracted = gfarch::extract(&archive)?;
 
-            let folder_name = if args.output.is_some() {
-                &args.output.unwrap()
-            } else {
-                &args.input
-            };
-
             // create folder
-            let folder_name = file_to_folder(&folder_name) + "/";
-            if !fs::exists(&folder_name)? {
-                fs::create_dir(&folder_name)?;
+            let folder_name = output
+                .clone()
+                .unwrap_or_else(|| input.with_extension(""));
+
+            if !folder_name.exists() {
+                fs::create_dir_all(&folder_name)?;
             }
 
             // write files
-            let mut num_errors = 0usize;
+            let mut num_errors = 0;
             let num_files = extracted.len();
+
             for file in extracted {
-                let result = fs::write(folder_name.to_string() + &file.0, file.1);
+                let result = fs::write(folder_name.join(&file.0), file.1);
+
                 if let Err(e) = result {
                     eprintln!(
-                        "{} '{}' {}. Error: {}",
+                        "{} \"{}\" {}. Error: {}",
                         "Failed to write the contents of".yellow(),
                         file.0,
                         "to disk.".yellow(),
@@ -112,32 +116,31 @@ fn main() -> Result<()> {
             }
         }
 
-        ToolUsage::Archive => {
-            // validate input
-            if !fs::exists(&args.input)? {
+        Command::Archive { input, output, version, compression_type, gfcp_offset, alignment } => {
+            if !input.is_dir() {
+                eprintln!("{}", "Input must be a folder.".red());
+                std::process::exit(1);
+            }
+
+            fn is_dir_empty(path: &PathBuf) -> Result<bool> {
+                Ok(fs::read_dir(path)?.next().is_none())
+            }
+            
+            if is_dir_empty(&input)? {
                 eprintln!(
-                    "{} '{}' {}",
+                    "{} \"{}\" {}",
                     "The folder".red(),
-                    args.input,
-                    "does not exist.".red()
+                    input.display(),
+                    "is empty.".red()
                 );
                 std::process::exit(1);
             }
 
-            if args.archive_version.is_none() {
-                eprintln!("{}", "An archive version is required.".red());
-                std::process::exit(1);
-            }
-
-            let archive_version = args.archive_version.unwrap();
-
-            let compression_type = args.compression_type.unwrap_or(CompressionType::None);
-
-            // read file contents
             let mut files: Vec<(String, Vec<u8>)> = Vec::new();
 
             let mut num_errors = 0;
-            for entry in fs::read_dir(&args.input)? {
+            
+            for entry in fs::read_dir(input)? {
                 let entry = if entry.is_ok() {
                     entry.unwrap()
                 } else {
@@ -146,73 +149,61 @@ fn main() -> Result<()> {
                 };
 
                 let path = entry.path();
-                let filename = path
-                    .file_name()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .to_string();
+                let filename = path.file_name().unwrap().to_string_lossy().to_string();
                 let contents = fs::read(path)?;
 
                 files.push((filename, contents));
             }
-
-            if files.len() == 0 {
-                eprintln!(
-                    "{} '{}' {}",
-                    "The folder".red(),
-                    &args.input,
-                    "is empty.".red()
-                );
-                std::process::exit(1);
-            }
-
-            // convert to something for the gfarch crate to use
+            
+            // determine parameters
             let compression_type = match compression_type {
                 CompressionType::None => gfarch::CompressionType::None,
                 CompressionType::BPE => gfarch::CompressionType::BPE,
                 CompressionType::LZ10 => gfarch::CompressionType::LZ10,
+
+                CompressionType::Zlib => gfarch::CompressionType::Zlib,
             };
 
-            let archive_version = match archive_version {
-                ArchiveVersion::V2 => gfarch::Version::V2,
-                ArchiveVersion::V3 => gfarch::Version::V3,
-                ArchiveVersion::V3_1 => gfarch::Version::V3_1,
+            let version = match version {
+                Version::V2 => gfarch::Version::V2,
+                Version::V3 => gfarch::Version::V3,
+                Version::V3_1 => gfarch::Version::V3_1,
             };
 
-            let offset = match args.gfcp_offset {
-                Some(o) if parse_offset(&o).is_ok() => {
-                    gfarch::GFCPOffset::Custom(parse_offset(&o).unwrap())
-                }
-                _ => gfarch::GFCPOffset::Default,
+            let offset = match gfcp_offset {
+                Some(offs) => gfarch::GFCPOffset::Custom(offs),
+                None => gfarch::GFCPOffset::Default
+            };
+
+            let alignment = match alignment {
+                Some(align) => gfarch::Alignment::Custom(align),
+                None => gfarch::Alignment::Default
             };
 
             // create archive
-            let archive =
-                gfarch::pack_from_files(&files, archive_version, compression_type, offset);
+            let archive = gfarch::pack_from_files(
+                &files,
+                version,
+                compression_type,
+                offset,
+                alignment
+            );
 
             // write archive
+            let output_path = if output.extension().is_some() {
+                output.clone()
+            } else {
+                output.with_extension("gfa")
+            };
 
-            let output_name = match args.output {
-                Some(ref name) => {
-                    // if the name ends with ".gfa", remove it
-                    if name.ends_with(".gfa") {
-                        &name[..name.len() - 4] // remove the last 4 characters
-                    } else {
-                        name
-                    }
-                }
-                None => &args.input,
-            }
-            .to_string();
-
-            fs::write(output_name + ".gfa", archive)?;
+            fs::write(output_path, archive)?;
 
             if num_errors != 0 {
                 println!(
                     "{} {} {}",
                     "Failed to store".red(),
                     num_errors,
-                    "in the archive.".red()
+                    "files in the archive.".red()
                 );
             }
         }
