@@ -36,6 +36,7 @@ If you are targeting a specific game, the version and compression types are as f
 | 3.1 | <em>Yoshi's Woolly World | Byte Pair Encoding | `3.1`|
 | 3.1 | <em>Poochy & Yoshi's Woolly World | LZ10 | `3.1` |
 | 3.1 | <em>Kirby's Extra Epic Yarn</em> | LZ10 | `3.1` |
+| 3.1 | <em>Mii Plaza</em> | LZ10 | `3.1` |
 
 ### Custom compression
 Here is a list of supported custom compression types:
@@ -47,5 +48,4 @@ Here is a list of supported custom compression types:
 #### Todo - additional GfArch confirmations
 Check the following:
 - Looksley's Line Up (version: 3.0, compression: unknown)
-- Mii Plaza (version: 3.1? compression: bpe?)
 - Other Good-Feel titles that use GfArch
