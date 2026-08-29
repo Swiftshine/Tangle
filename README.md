@@ -1,6 +1,6 @@
 # Tangle
 A Good-Feel archive tool.
-Documentation on the format can be found [here](https://swiftshine.github.io/doc/gfa.html).
+Documentation on the format can be found [here](https://stitchshop.miraheze.org/wiki/Gfl/GFA).
 
 ## Usage
 Use `tangle -h` or `tangle --help` to get a list of needed arguments.
